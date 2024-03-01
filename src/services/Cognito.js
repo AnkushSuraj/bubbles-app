@@ -18,7 +18,7 @@ const poolData = {
 
 const cognitoClient = new CognitoIdentityServiceProvider(cognitoData);
 
-const getUser = async(payload) => {
+const getUser = async (payload) => {
     try {
         let response = {};
         const getUserParams = {
@@ -52,7 +52,7 @@ const getUser = async(payload) => {
     }
 }
 
-const signUpUser = async(payload) => {
+const signUpUser = async (payload) => {
     try {
         let response = {};
         let phoneNumber = `+${payload.country_code}${payload.phone}`;
@@ -97,7 +97,7 @@ const signUpUser = async(payload) => {
     }
 }
 
-const confirmUserAccount = async(payload) => {
+const confirmUserAccount = async (payload) => {
     try {
         const params = {
             ClientId: poolData.ClientId,
@@ -122,7 +122,7 @@ const confirmUserAccount = async(payload) => {
     }
 }
 
-const loginUserAccount = async(payload) => {
+const loginUserAccount = async (payload) => {
     try {
         let email = payload.email;
         let password = payload.password;
@@ -154,7 +154,7 @@ const loginUserAccount = async(payload) => {
 }
 
 
-const resendOTP = async(payload) => {
+const resendOTP = async (payload) => {
     try {
         let email = payload.email;
         const resendParams = {
@@ -200,7 +200,7 @@ async function checkSocialIdExistsOnCognito(customAttributeName, customAttribute
     }
 }
 
-const new_checkSocialIdExistsOnCognito = async(payload) => {
+const new_checkSocialIdExistsOnCognito = async (payload) => {
     try {
 
         let getUserParams, response = {};
@@ -234,32 +234,38 @@ const new_checkSocialIdExistsOnCognito = async(payload) => {
     }
 }
 
-const getUserBySocialId = async(payload) => {
+const getUserBySocialId = async (payload) => {
     try {
         let response = {};
         const getUserParams = {
             UserPoolId: poolData.UserPoolId,
-            Filter: `google_id="${payload.social_id}"`
+            Filter: `username="${payload.social_id}"`
         };
         const getUser = await cognitoClient.listUsers(getUserParams).promise();
         if (getUser.Users.length) {
+            let userAttributesObject = {};
+            const userAttributes = getUser?.Users[0]?.Attributes;
+            userAttributes.forEach(attribute => {
+                userAttributesObject[attribute.Name] = attribute.Value;
+              });
             response = {
                 success: true,
                 status: 1,
                 statusCode: RESPONSE_CODES.ALREADY_EXIST,
-                message: "The email address you entered is already associated with an account.",
-                data:  getUser?.Users
+                message: "User details.",
+                data:  userAttributesObject
             };
         } else {
             response = {
                 success: false,
                 status: 0,
                 statusCode: RESPONSE_CODES.NOT_FOUND,
-                message: "The email address you entered is not registered with us!!."
+                message: "No data found!!"
             };
         }
         return response;
     } catch (error) {
+        console.log("error------------",error)
         return {
             success: false,
             status: 0,

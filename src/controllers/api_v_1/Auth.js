@@ -8,7 +8,7 @@ import { response } from "express";
 const authController = {
 
     // Check emil already exists
-    email_exists: async(req, res) => {
+    email_exists: async (req, res) => {
         try {
             const body = req.body;
             let response = await getUser(body);
@@ -35,7 +35,7 @@ const authController = {
     },
 
     // check phone already exists
-    phone_exists: async(req, res) => {
+    phone_exists: async (req, res) => {
         try {
             let response = {};
             const data = req.body;
@@ -59,27 +59,36 @@ const authController = {
     },
 
     //Register User
-    signUp: async(req, res) => {
+    signUp: async (req, res) => {
         try {
             const body = req.body;
-            let response = await getUser(body);
-            if (!response.success) {
-                response = await signUpUser(body);
-                if (response.success) {
-                    body.user_id = response.data.user_id;
-                    const registerUser = await signUpNewUser(body);
-                    if (registerUser.success) {
-                        registerUser.message = "User register successfully, To login your account, please verify your account with otp sent on your registered email!!";
-                    }
-                    response = registerUser;
-                }
-            }
+            // let response = await getUser(body);
+            // if (!response.success) {
+            //     response = await signUpUser(body);
+            //     if (response.success) {
+            //         body.user_id = response.data.user_id;
+            //         const registerUser = await signUpNewUser(body);
+            //         if (registerUser.success) {
+            //             registerUser.message = "User register successfully, To login your account, please verify your account with otp sent on your registered email!!";
+            //         }
+            //         response = registerUser;
+            //     }
+            // }
 
             const userSocialInfo = await getUserBySocialId(body);
-            console.log("userSocialInfo----------------------",userSocialInfo)
+            if (userSocialInfo.status) {
+                body.user_id = userSocialInfo.data.sub;
+                // const registerUser = await signUpNewUser(body);
+                // if (registerUser.success) {
+                //     registerUser.message = "User register successfully, To login your account, please verify your account with otp sent on your registered email!!";
+                // }
+                // response = registerUser;
+
+            }
 
             return res.status(response.statusCode).json(response);
         } catch (error) {
+            console.log("error----------------",error)
             return res.status(RESPONSE_CODES.ERROR).json({
                 success: false,
                 status: 0,
@@ -90,7 +99,7 @@ const authController = {
     },
 
     // Confirm User On Cognito
-    confirmUser: async(req, res) => {
+    confirmUser: async (req, res) => {
         try {
             const body = req.body;
             let response = await getUser(body);
@@ -114,7 +123,7 @@ const authController = {
     },
 
     // Get Admin User Details
-    login: async(req, res) => {
+    login: async (req, res) => {
         try {
             const body = req.body;
             let response = await getUser(body);
@@ -125,14 +134,14 @@ const authController = {
                     response = await getUserDataFromEmail(body);
                     if (response.success) {
                         body.ipAddress = req.connection.remoteAddress;
-                        const save_device_token = await saveDeviceToken({...body, ...response.data.user });
+                        const save_device_token = await saveDeviceToken({ ...body, ...response.data.user });
                         if (!save_device_token.success) {
                             return res.status(save_device_token.statusCode).json(save_device_token);
                         }
                         body.device_token = save_device_token.device_token;
                         body.userAgentData = useragent(JSON.parse(JSON.stringify(req.get('user-agent'))));
 
-                        const ms_token = await generateLoginAttemptToken({...body, ...response.data.user });
+                        const ms_token = await generateLoginAttemptToken({ ...body, ...response.data.user });
 
                         if (!ms_token.success) {
                             return res.status(ms_token.statusCode).json(ms_token);
@@ -155,7 +164,7 @@ const authController = {
         }
     },
 
-    resendOTP: async(req, res) => {
+    resendOTP: async (req, res) => {
         try {
             const body = req.body;
             let response = await getUser(body);
@@ -173,7 +182,7 @@ const authController = {
         }
     },
 
-    social_verification: async(req, res) => {
+    social_verification: async (req, res) => {
         try {
             const data = req.body;
             let custom_attribute_name, custom_attribute_value;
@@ -226,7 +235,7 @@ const authController = {
     },
 
     // Get Admin User Details
-    login_with_otp: async(req, res) => {
+    login_with_otp: async (req, res) => {
         try {
             const data = req.body;
             const response = await sendLoginOTP(data);
@@ -241,7 +250,7 @@ const authController = {
         }
     },
 
-    forgotPassword: async(req, res) => {
+    forgotPassword: async (req, res) => {
         try {
             const data = req.body;
             data.detail_type = "email";
@@ -275,13 +284,13 @@ const authController = {
         }
     },
 
-    verifyEmailOTP: async(req, res) => {
+    verifyEmailOTP: async (req, res) => {
         try {
             const data = req.body;
             data.detail_type = "email";
             let response = await getUserDetails(data);
             if (response.success) {
-                const verifyEmail = await verifyEmailOTP({...data, ...response.data });
+                const verifyEmail = await verifyEmailOTP({ ...data, ...response.data });
                 response = verifyEmail;
             }
             return res.status(response.statusCode).json(response);
@@ -295,7 +304,7 @@ const authController = {
         }
     },
 
-    resetPassword: async(req, res) => {
+    resetPassword: async (req, res) => {
         try {
             let response = {};
             const data = req.body;
