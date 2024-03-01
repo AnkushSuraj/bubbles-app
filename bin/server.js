@@ -31,7 +31,7 @@ app.use(cors({
     optionsSuccessStatus: 204
 }));
 
-app.use(authMiddleWare);
+// app.use(authMiddleWare);
 
 app.use('/api', router);
 
