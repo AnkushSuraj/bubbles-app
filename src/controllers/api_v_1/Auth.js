@@ -1,7 +1,7 @@
 import { RESPONSE_CODES, USER_STATUS, SOCIAL_TYPES } from "../../config/constants.js";
 import useragent from 'ua-parser-js';
 import { getUserDetails, signUpNewUser, checkSocialId, authenticateUserUsingEmailPassword, saveDeviceToken, generateLoginAttemptToken, getUserDataFromEmail, verifyEmailOTP, updateOTPAndSendEmail, resetUserPassword, sendLoginOTP, updateUserStatus } from "../../services/Auth.js";
-import { getUser, signUpUser, confirmUserAccount, loginUserAccount, resendOTP, checkSocialIdExistsOnCognito, getUserBySocialId } from "../../services/Cognito.js";
+import { getUser, signUpUser, confirmUserAccount, loginUserAccount, resendOTP, checkSocialIdExistsOnCognito, getUserBySocialId, updateUser } from "../../services/Cognito.js";
 
 import { response } from "express";
 
@@ -62,9 +62,10 @@ const authController = {
     signUp: async (req, res) => {
         try {
             const body = req.body;
-            // let response = await getUser(body);
+            let response = {};
+            // response = await getUser(body);
             // if (!response.success) {
-            //     response = await signUpUser(body);
+                // response = await signUpUser(body);
             //     if (response.success) {
             //         body.user_id = response.data.user_id;
             //         const registerUser = await signUpNewUser(body);
@@ -75,20 +76,23 @@ const authController = {
             //     }
             // }
 
-            const userSocialInfo = await getUserBySocialId(body);
-            if (userSocialInfo.status) {
-                body.user_id = userSocialInfo.data.sub;
-                // const registerUser = await signUpNewUser(body);
-                // if (registerUser.success) {
-                //     registerUser.message = "User register successfully, To login your account, please verify your account with otp sent on your registered email!!";
-                // }
-                // response = registerUser;
+            if (body.social_id) {
+                const userSocialInfo = await getUserBySocialId(body);
+                if(userSocialInfo.status){
+
+                    body.user_id = userSocialInfo.data.sub;
+                    response = await updateUser(body);
+                    // const registerUser = await signUpNewUser(body);
+                    // if (registerUser.success) {
+                    //     registerUser.message = "User register successfully, To login your account, please verify your account with otp sent on your registered email!!";
+                    // }
+                    // response = registerUser;
+                }
 
             }
 
             return res.status(response.statusCode).json(response);
         } catch (error) {
-            console.log("error----------------",error)
             return res.status(RESPONSE_CODES.ERROR).json({
                 success: false,
                 status: 0,

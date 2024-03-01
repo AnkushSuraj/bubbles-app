@@ -275,6 +275,44 @@ const getUserBySocialId = async (payload) => {
     }
 }
 
+const updateUser = async (payload) => {
+    try {
+        let response = {};
+        let phoneNumber = `+${payload.country_code}${payload.phone}`;
+        const updateParams = {
+            UserPoolId: poolData.UserPoolId,
+            Username: payload.social_id,
+            UserAttributes: [
+                // { Name: 'email', Value: payload.email },
+                { Name: 'phone_number', Value: phoneNumber },
+                { Name: 'custom:first_name', Value: payload.first_name },
+                { Name: 'custom:last_name', Value: payload.last_name },
+                { Name: 'custom:role', Value: payload.role },
+            ],
+        };
+
+        await cognitoClient.adminUpdateUserAttributes(updateParams).promise();
+
+        response = {
+            success: true,
+            status: 1,
+            statusCode: RESPONSE_CODES.POST,
+            message: "User created in AWS Cognitio Successfully and OTP sent on your registered email!!.",
+            data: {
+                user_id: payload.user_id
+            }
+        };
+        return response;
+    } catch (error) {
+        return {
+            success: false,
+            status: 0,
+            statusCode: RESPONSE_CODES.ERROR,
+            message: error.message
+        };
+    }
+}
+
 export {
     getUser,
     checkSocialIdExistsOnCognito,
@@ -282,5 +320,6 @@ export {
     confirmUserAccount,
     loginUserAccount,
     resendOTP,
-    getUserBySocialId
+    getUserBySocialId,
+    updateUser
 };
